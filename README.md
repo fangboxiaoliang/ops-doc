@@ -18,6 +18,9 @@
   * [MySQL Debug](databases/mysql_status.md)
   * [MySQL备份恢复](databases/mysql_xtrabackup.md)
   * [SQLServer系统函数](databases/mssql_sp.md)
+  * MongoDB
+    * [Mongo基础信息汇总](databases/mongo.md)
+    * [MongoDB复杂集](databases/mongo_repl.md)
 
 * [生态工具](ops-tools/README.md)
   * Zabbix监控模板
