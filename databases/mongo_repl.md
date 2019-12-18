@@ -47,3 +47,34 @@ rs.reconfig(config);
 - 隐藏节点
 
    节点不希望被客户端连接并查询。比如因硬件性能差，只是起备份作用。通过参数`hidden: true`。只有`priority`为0的节点才能隐藏。
+
+- 主节点降级
+
+        /* 主节点降为备节点，并等待120秒选举。如果120秒后未选举出新主节点，重新成为主节点 */
+        rs.stepDown(120);
+    
+- 单机模式运行
+
+  因为在复制集模式下，不能修改备份节点的相关参数。如果要修改备份节点相关参数，则需要通过单机模式下启动服务
+
+  ```bash
+  # 先获取当前进程的启动参数，主要关注dbpath选项以及复制集的名称
+  db.serverCmdLineOpts();
+
+  # 停止掉备份进程，并以相同dbpath，不同端口。以单机模式启动服务.假设之前的dbpath为/data/db
+  mongod --port 3001 --dbpath /data/db
+
+  # 相关执行操作完成后，继续以之前的命令行参数启动即可。会自动从停止前的位置进行同步
+  ```
+
+- 备节点进入维护模式，对客户端不可见
+
+    ```bash
+    # true为维护模式，恢复时修改为false即可
+    db.adminCommand({"replSetMaintenanceModel": true})
+    ```
+- 查看`oplog`使用情况
+
+   ```bash
+   db.printReplicationInfo()
+   ```
