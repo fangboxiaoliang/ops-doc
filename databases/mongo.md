@@ -247,7 +247,7 @@
 
     创建了该索引的文档，到达老化时间后，会被`MongoDB`自动删除。
 
-        db.collection.createIndex({"lastUpdate": 1}, {"expireAfterSecs": 60 * 60 * 24})
+        db.collection.createIndex({"lastUpdate": 1}, {"expireAfterSecs": 60 * 60 * 24}, {"background": true})
 
 - 全文本索引
 
