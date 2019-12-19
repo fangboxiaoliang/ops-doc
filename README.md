@@ -20,7 +20,9 @@
   * [SQLServer系统函数](databases/mssql_sp.md)
   * MongoDB
     * [Mongo基础信息汇总](databases/mongo.md)
-    * [MongoDB复杂集](databases/mongo_repl.md)
+    * [MongoDB复制集](databases/mongo_repl.md)
+    * [MongoDB分片](databases/mongo_shard.md)
+    * [MongoDB Debug](databases/mongo_debug.md)
 
 * [生态工具](ops-tools/README.md)
   * Zabbix监控模板
