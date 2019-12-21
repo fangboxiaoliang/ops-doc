@@ -17,11 +17,17 @@
            fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        proxy . /etc/resolv.conf
+        forward . /etc/resolv.conf
         cache 30
         loop
         reload
         loadbalance
-        forward test.io 172.18.171.109 172.18.171.113
     }
+  # test.io将由内部DNS解析
+  test.io:53 {
+    errors
+    cache 30
+    reload
+    forward . 173.18.171.109
+  }
 ```
