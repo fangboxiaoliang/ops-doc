@@ -17,10 +17,8 @@ pip install -i URL PackageName
 
 ## 其他杂项
 
-- IP查询: https://ifconfig.co/
-
 - ISO下载: http://msdn.itellyou.cn/
 - WinPE工具: http://www.wepe.com.cn/
 - 行业新星: https://www.itjuzi.com/
 - AnsiblePlayBook： https://galaxy.ansible.com/
-- 愉快地Google: http://uu.ydtxhr.org/ (有些内容会被过滤，但技术相关一般不会)
+- 愉快地Google: https://abc.bestwhl.top/(有些内容会被过滤，但技术相关一般不会)
