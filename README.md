@@ -1,11 +1,11 @@
 # 目录
 
 * [前言](README.md)
-* [Linux知识](linux/README.md)
+* [Linux](linux/README.md)
+  * [系统调优](linux/linux-optization.md)
   * [Shell技巧](linux/shell.md)
   
 * [基础服务](baseservices/README.md)
-  
   * [DNS](baseservices/named.md)
   * [Logratate](baseservices/lograte.md)
   * NGINX
@@ -13,6 +13,9 @@
     * [NGINX配置文件解读](baseservices/nginx-conf.md)
     * [NGINX FAQ](baseservices/nginx-faq.md)
     * [OpenRestry灵活限速](baseservices/openresty-lua-limit.md)
+
+* 消息队列
+  * [RabbitMQ](queue/rabbitmq-prod.md)
 
 * [数据库](database/README.md)
   * [MySQL Debug](databases/mysql_status.md)
