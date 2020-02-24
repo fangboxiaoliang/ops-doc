@@ -8,6 +8,7 @@
 * [基础服务](baseservices/README.md)
   * [DNS](baseservices/named.md)
   * [Logratate](baseservices/lograte.md)
+  * [Rsync](baseservices/rsync.md)
   * NGINX
     * [NGINX常用内置变量](baseservices/nginx-variables.md)
     * [NGINX配置文件解读](baseservices/nginx-conf.md)
