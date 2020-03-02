@@ -16,9 +16,14 @@ yum install rsync -y
 [mindoc]
 path = /var/www/mindoc
 comment = Java mindoc
+read only = true
+hosts allow = 128.0.255.0/24
 auth users = mindoc
 secrets file = /etc/rsyncd.secrets
+
+# 更多可用参数: man rsyncd.conf 查看说明 
 ```
+
 
 创建引用的`/etc/rsyncd.secrets`，格式为`用户名:密码`
 
