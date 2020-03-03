@@ -14,6 +14,26 @@
 
     多个Graylog时，只能有一个Master。
 
+## 前期准备
+
+- 新老节点安装`NTP`服务。公有云不需要，一般默认会时间同步
+
+  ```bash
+  yum install ntp -y
+  systemctl enable ntpd
+  systemctl start ntpd
+  ```
+
+- 【可选】关闭`Elasticsearch`全局负载均衡.可使用原来的索引还在原来节点上，这样新添加的`ES`节点可以下线，不影响老数据
+
+  ```bash
+  curl -XPUT http://es:9200/_cluster/settings -d '{
+    "transient" : {
+        "cluster.routing.rebalance.enable" : "none"
+    }
+  }'
+  ```
+
 ## 可用`YAML`
 
 ```yaml
@@ -34,21 +54,22 @@ elasticsearch:
   container_name: graylog-es
   net: host
   volumes:
-    - /etc/localtime:/etc/localtime
     - ./elas_data:/usr/share/elasticsearch/data
     - ./plugins:/usr/share/elasticsearch/plugins
   environment:
+    - TZ=Asia/Shanghai
     - http.host=0.0.0.0
     - transport.host=0.0.0.0
     - network.host=0.0.0.0
-    - "ES_JAVA_OPTS=-Xms3000m -Xmx3000m"
     # 增加ENV，指定前一个ES,这样ES组成集群
     - "discovery.zen.ping.unicast.hosts=128.0.255.10"
+    # JAVA_OPTS一定要放在ENV的最后
+    - "ES_JAVA_OPTS=-Xms3000m -Xmx3000m"
   ulimits:
     memlock:
       soft: -1
       hard: -1
-  mem_limit: 4g
+  mem_limit: 6g
 # Graylog: https://hub.docker.com/r/graylog/graylog/
 graylog:
   image: graylog/graylog:3.0
