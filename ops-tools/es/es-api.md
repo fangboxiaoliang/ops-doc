@@ -61,3 +61,7 @@
 - 检索指定索引指定Type的信息
 
         curl -XGET http://es:9200/IndexName/TypeName/_search?pretty
+
+- 获取指定ID的文档
+        
+        curl -XGET http://es:9200/IndexName/TypeName/ID
