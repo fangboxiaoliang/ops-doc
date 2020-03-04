@@ -3,7 +3,7 @@
 ## 加大延迟索引复制时间
 
 ```bash
-curl -XPUT http://es:9200/_all/_settings -d '{
+curl -XPUT  -H "Content-type: application/json"  http://es:9200/_all/_settings -d '{
   "settings": {
     "index.unassigned.node_left.delayed_timeout": "5m"
   }
@@ -13,7 +13,7 @@ curl -XPUT http://es:9200/_all/_settings -d '{
 ## 通过API，临时禁用索引分片
 
 ```bash
-curl -XPUT http://es:9200/_cluster/settings -d '{
+curl -XPUT -H "Content-type: application/json"  http://es:9200/_cluster/settings -d '{
     "transient" : {
         "cluster.routing.allocation.enable" : "none"
     }
@@ -29,7 +29,7 @@ systemctl stop elasticsearch
 ### 重新打开全局负载均衡
 
 ```bash
-curl -XPUT http://es:9200/_cluster/settings -d '{
+curl -XPUT -H "Content-type: application/json"  http://es:9200/_cluster/settings -d '{
     "transient" : {
         "cluster.routing.allocation.enable" : "all"
     }

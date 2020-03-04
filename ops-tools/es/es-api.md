@@ -18,7 +18,7 @@
 
 - 修改默认密码
 
-        curl -XPUT -u elastic  'http://es:9200/_xpack/security/user/elastic/_password'  -d '{
+        curl -XPUT -H "Content-type: application/json" -u elastic  'http://es:9200/_xpack/security/user/elastic/_password'  -d '{
                 "password" : "NewPassword"
         }'
 
