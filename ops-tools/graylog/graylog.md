@@ -16,17 +16,30 @@ Graylog是一个集中日志收集与检索系统。可以将它看成是一个E
 
 ## 安装
 
-## Allinone方式
+### 准备工具
+因为`Elasticsearch`对内核参数与`limits`有要求，而系统默认不满足，帮需要调整
+
+```bash
+# 1.修改limits.conf
+vi /etc/security/limits.conf
+root - nofile 165536
+*    - nofile 165536
+
+# 2.增加内核参数
+echo "vm.max_map_count = 262144" > /etc/sysctl.d/es.conf
+sysctl -p /etc/sysctl.d/es.conf
+```
+
+### Allinone方式
 
 编辑docker-compose.yml文件
 
 ```yaml
-version: '2'
-services:
   # MongoDB: https://hub.docker.com/_/mongo/
   mongodb:
     image: mongo:3
     restart: always
+    net: host
     container_name: graylog-db
     volumes:
       - ./mongo_data:/data/db
@@ -35,10 +48,11 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.1
     restart: always
     container_name: graylog-es
+    net: host
     volumes:
-      - /etc/localtime:/etc/localtime
       - ./elas_data:/usr/share/elasticsearch/data
     environment:
+      - TZ=Asia/Shanghai
       - http.host=0.0.0.0
       - transport.host=0.0.0.0
       - network.host=0.0.0.0
@@ -49,18 +63,20 @@ services:
         soft: -1
         hard: -1
     # 内存限制相应调整
-    mem_limit: 1g
+    mem_limit: 2g
   # Graylog: https://hub.docker.com/r/graylog/graylog/
   graylog:
     image: graylog/graylog:3.0
     restart: always
     container_name: graylog-server
+    net: host
     environment:
       # echo -n "admin" | sha256sum
       - TZ=Asia/Shanghai
+      - GRAYLOG_MONGODB_URI=mongodb://128.0.255.10:27017/graylog
       - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       # IP设置成宿主机IP
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://128.0.255.104:9000/
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://128.0.255.10:9000/
       - GRAYLOG_TRANSPORT_EMAIL_ENABLED=true
       - GRAYLOG_TRANSPORT_EMAIL_HOSTNAME=smtp.qq.com
       - GRAYLOG_TRANSPORT_EMAIL_PORT=25
@@ -74,21 +90,6 @@ services:
       - GRAYLOG_TRANSPORT_EMAIL_WEB_INTERFACE_URL=http://128.0.255.10:9000/
       - GRAYLOG_ROOT_TIMEZONE=Asia/Shanghai
       - "JAVA_OPTS=-Xms512m -Xmx512m"
-    links:
-      - mongodb:mongo
-      - elasticsearch
-    depends_on:
-      - mongodb
-      - elasticsearch
-    ports:
-      # Graylog web interface and REST API
-      - 9000:9000
-      # Syslog TCP
-      - 514:514/udp
-      # Syslog Raw
-      - 1514:1514/udp
-      # GELF UDP
-      - 12201:12201/udp
 ```
 
 因为docker-compose的原因，新生成的卷权限为root，还需要做点特殊处理

@@ -16,6 +16,19 @@
 
 ## 前期准备
 
+- 新节点修改内核参数，以满足`Elasticsearch`要求
+
+  ```bash
+  # 1.修改limits.conf
+  vi /etc/security/limits.conf
+  root - nofile 165536
+  *    - nofile 165536
+
+  # 2.增加内核参数
+  echo "vm.max_map_count = 262144" > /etc/sysctl.d/es.conf
+  sysctl -p /etc/sysctl.d/es.conf
+  ```
+
 - 新老节点安装`NTP`服务。公有云不需要，一般默认会时间同步
 
   ```bash
@@ -27,7 +40,7 @@
 - 【可选】关闭`Elasticsearch`全局负载均衡.可使用原来的索引还在原来节点上，这样新添加的`ES`节点可以下线，不影响老数据
 
   ```bash
-  curl -XPUT http://es:9200/_cluster/settings -d '{
+  curl -XPUT -H "Content-type: application/json" http://es:9200/_cluster/settings -d '{
     "transient" : {
         "cluster.routing.rebalance.enable" : "none"
     }
@@ -107,7 +120,7 @@ graylog:
 
 ```bash
 docker-compose up -d
-chown -R 777 elas_data
+chmod -R 777 elas_data
 docker-compose restart
 ```
 
