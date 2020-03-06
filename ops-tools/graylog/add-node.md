@@ -71,11 +71,12 @@ elasticsearch:
     - ./plugins:/usr/share/elasticsearch/plugins
   environment:
     - TZ=Asia/Shanghai
-    - http.host=0.0.0.0
-    - transport.host=0.0.0.0
-    - network.host=0.0.0.0
+    - cluster.name=graylog
+    - node.name=255.80
+    # 指定本机IP
+    - network.host=128.0.255.80
     # 增加ENV，指定前一个ES,这样ES组成集群
-    - "discovery.zen.ping.unicast.hosts=128.0.255.10"
+    - "discovery.zen.ping.unicast.hosts=128.0.255.10,128.0.255.80"
     # JAVA_OPTS一定要放在ENV的最后
     - "ES_JAVA_OPTS=-Xms3000m -Xmx3000m"
   ulimits:
@@ -123,6 +124,28 @@ docker-compose up -d
 chmod -R 777 elas_data
 docker-compose restart
 ```
+
+## 老节点`Elassticearch`参数修改
+
+  因为增加了新节点，当老节点启动时，它不主动连接老节点时，会导致脑残，它自己成为主节点。
+
+  在`docker-compose.yml`中的`elasticsearch`项中，增加
+  ```yaml
+  ....
+  elasticsearch:
+  image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.1
+  restart: always
+  container_name: graylog-es
+  net: host
+  volumes:
+    - ./elas_data:/usr/share/elasticsearch/data
+    - ./plugins:/usr/share/elasticsearch/plugins
+  environment:
+    ...
+    # 增加配置，指定新增加的节点
+    - "discovery.zen.ping.unicast.hosts=128.0.255.10,128.0.255.80"
+    ... 
+  ```
 
 ## 检查
 

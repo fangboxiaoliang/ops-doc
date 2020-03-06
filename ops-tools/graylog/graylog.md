@@ -53,9 +53,14 @@ sysctl -p /etc/sysctl.d/es.conf
       - ./elas_data:/usr/share/elasticsearch/data
     environment:
       - TZ=Asia/Shanghai
-      - http.host=0.0.0.0
-      - transport.host=0.0.0.0
-      - network.host=0.0.0.0
+      - cluster.name=graylog
+      # 方便标识，建议设置为主机IP的后两位
+      - node.name=255.10
+      # 设置为本机IP，组成集群时，用于通告自身的连接地址
+      - network.host=128.0.255.10
+      - discovery.zen.minimum_master_nodes=1
+      # 后续如果增加Elasticsearch节点，增加相应节点IP
+      - "discovery.zen.ping.unicast.hosts=128.0.255.10"
       # -Xms与-Xmx值要一样
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
