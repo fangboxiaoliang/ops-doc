@@ -110,7 +110,7 @@ chown 777 -R elas_data
 docker-compose restart
 ```
 
-## Nginx代理内部Graylog
+### Nginx代理内部Graylog
 
 ```conf
 server {
