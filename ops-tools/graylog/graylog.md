@@ -78,6 +78,7 @@ sysctl -p /etc/sysctl.d/es.conf
     environment:
       # echo -n "admin" | sha256sum
       - TZ=Asia/Shanghai
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://128.0.255.10:9200
       - GRAYLOG_MONGODB_URI=mongodb://128.0.255.10:27017/graylog
       - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       # IP设置成宿主机IP

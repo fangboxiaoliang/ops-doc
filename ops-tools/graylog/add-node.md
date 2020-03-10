@@ -92,7 +92,8 @@ graylog:
   container_name: graylog-server
   environment:
     - TZ=Asia/Shanghai
-    - GRAYLOG_ELASTICSEARCH_HOSTS=http://localhost:9200
+    # 同Elasticsearch的net.host值一样，指定本机IP
+    - GRAYLOG_ELASTICSEARCH_HOSTS=http://128.0.255.80:9200
     # 注意，这里的Mongo使用第一个的。因为要配置共享
     - GRAYLOG_MONGODB_URI=mongodb://128.0.255.10:27017/graylog
     # 不指定为Master
