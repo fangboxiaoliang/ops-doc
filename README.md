@@ -56,6 +56,7 @@
   * [常用开发网址](dev/README.md)
   * [Chrome允许自签名证书](dev/chrome.md)
 * Kubernetes
+  * [kUbernetes使用NFS类型的StorageClass](k8s/k8s-nfs-pv.md)
   * [Kubectl多集群](k8s/kubectl.md)
   * [RBAC](k8s/k8s-rbac.md)
   * [CoreDNS配置示例](k8s/coredns.md)
