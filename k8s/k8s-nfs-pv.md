@@ -11,7 +11,11 @@
     yum -y install nfs-utils rpcbind
 
     # 设置共享目录参数
-    echo "/data/nfs  128.0.255.0/16(rw, no_root_squash)"
+    echo "/data/nfs  128.0.255.0/16(rw, no_root_squash)" > /etc/exports
+
+    # 启动服务
+    systemctl enable rpcbind && systemctl start rpcbind
+    systemctl enable nfs && systemctl start nfs
     ```
 
 ## `K8S`所有主机
