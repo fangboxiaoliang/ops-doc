@@ -64,8 +64,8 @@ chmod 400 rsync.pass
 
 ```bash
 cd /backups/
-# 将服务端的/var/www/mindoc目录下所有文件同步至当前目录下
-rsync -avz --password-file=rsync.pass mindoc@服务端IP::mindoc   ./
+# 将服务端的/var/www/mindoc目录下所有文件同步至当前目录下.当源服务器中的文件被删除时，目标服务器中的文件也删除
+rsync -avz --delete --password-file=rsync.pass mindoc@服务端IP::mindoc   ./
 ```
 
 ## Debug
