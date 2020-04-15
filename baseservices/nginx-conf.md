@@ -33,7 +33,7 @@ http {
             default $remote_addr;
             # 正则表达式，将分组realip捕获到的值设置为 $realip，并最终赋给$ClientRealIp
             "~^(?P<realip>((\d{1,3}\.){3}\d{1,3}))"   $realip;
-      }
+    }
 
     # 定义限制单个IP访问速率。每个IP访问每个URL的频率限制为5次
     # limit_req在使用时，如果要非常准确的限制请求频率。一定要在"/"目录下使用。很难验证其真实效果
@@ -135,6 +135,9 @@ http {
         # 如果相同变量，这里会覆盖全局的
         proxy_connect_timeout 3s;
         proxy_read_timeout 60s;
+        # 自定义503页面
+        err_page 503 /503.html;
+
 
         # 普通locations，千万记住根不要用正则的location，不然后续的location将匹配不到
         location  / {
@@ -145,6 +148,10 @@ http {
             # css/js/ico/png结尾的静态文件不记录日志
             if ($uri ~ "\.(css|js|ico|png)$") {
               access_log off;
+            }
+            # 自定义503页面
+            location = /503.html {
+              root /usr/share/nginx/html;
             }
             # 缓存有效期，这个数值其实就是告诉终端用户浏览器的失效时间。更改后要重启生效
             expires 1d;
