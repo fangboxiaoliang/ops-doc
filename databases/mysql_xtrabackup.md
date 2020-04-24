@@ -1,9 +1,25 @@
 # MySQL备份恢复
 
-## 基于xtrabackup备份
+## `xtrabackup`安装
 
 ```bash
-xtrabackup --backup --parallel=4 --compress  --compress-threads=4 --user=USERNAME --password=PASSWORD --database=DBNAME --target-dir=/data/backup
+# 安装Repo库
+yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+
+# 如果MySQL 8.0以上的安装此包
+yum install percona-xtrabackup-80 -y
+
+# MySQL5.1/5.5/5.6/5.7
+yum install percona-xtrabackup-24 -y
+```
+
+## 基于`xtrabackup`整库备份
+
+```bash
+# 如果不加--database就备份所有数据库
+xtrabackup  --host=127.0.0.1 --port=3306 --user=USERNAME --password=PASSWORD \
+            --backup  --parallel=4 --compress --compress-threads=4 \
+            --datadir=/var/lib/mysql --database=DBNAME --target-dir=/data/backup
 ```
 
 ## 基于xtrabackup恢复
@@ -24,8 +40,6 @@ systemctl start mysqld
 ```
 ## 单表备份还原
 
-单表备份时，必须使用`innobackupex`命令，不能使用`xtrabackup`
-
 单表备份依赖独立表空间，在`MySQL5.7`之后，该值默认开启
 
 ```SQL
@@ -34,12 +48,18 @@ SHOW VARIABLES LIKE 'innodb_file_per_table';
 
 
 ```bash
-# 先完整备份一次
+# 方式一: 使用innobackupex
 innobackupex --user=backup --password=123456 --include="cumcm.cumcm_sys_country" /home/backup
 
 # 完整备份完之后，再应用Redo日志，怕备份期间有事务产生
 innobackupex --apply-log --export /home/backup/2019-0o-10_13-17-57/
 
+# 方式二: 使用xtrabackup。--tables是基于正则表达式的。
+xtrabackup --host=127.0.0.1 --port=3306 --user=USERNAME --password=PASSWORD \
+           --backup  --parallel=4 --compress --compress-threads=4 \
+           --datadir=/var/lib/mysql --tables=tableName1,tableName2 \
+           --target-dir=/data/backup/tables
+           
 # 在要还原的DB上，需要先创建表结构
 mysql>CREATE TABLE cumcm.cumcm_sys_country LIKE cumcm.cumcm_sys_country_20190101;
 
@@ -49,9 +69,11 @@ mysql>ALTER TABLE cumcm.cumcm_sys_country DISCARD TABLESPACE;
 # 停止MySQL服务器
 systemctl stop mysqld
 
-# 复制之前备份的文件至MySQL的DATA目录
-cp /home/backup/2019-0o-10_13-17-57/cumcm/cumcm_sys_country.* /var/lib/mysql/cumcm
-# 提示是否覆盖原来的.frm文件。选择是
+# 复制备份出来的ibd文件至MySQL数据目录下, .frm文件不复制
+cp /home/backup/2019-0o-10_13-17-57/cumcm/cumcm_sys_country.ibd /var/lib/mysql/cumcm
+
+# 更改文件所有者为MySQL
+chown -R mysql:mysql /var/lib/mysql/
 
 # 启动MySQL
 systemctl start mysqld

@@ -6,6 +6,7 @@
   * [Shell技巧](linux/shell.md)
   
 * [基础服务](baseservices/README.md)
+  * [本地`Repo`源](baseservices/local-repo.md)
   * [DNS](baseservices/named.md)
   * [Logratate](baseservices/lograte.md)
   * [Rsync](baseservices/rsync.md)

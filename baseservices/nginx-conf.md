@@ -137,6 +137,8 @@ http {
         proxy_read_timeout 60s;
         # 自定义503页面
         err_page 503 /503.html;
+        # 方式二
+        # err_pag 503 @error;
 
 
         # 普通locations，千万记住根不要用正则的location，不然后续的location将匹配不到
@@ -145,14 +147,21 @@ http {
             if ($request_method = "HEAD") {
               access_log off;
             }
+
             # css/js/ico/png结尾的静态文件不记录日志
             if ($uri ~ "\.(css|js|ico|png)$") {
               access_log off;
             }
+
             # 自定义503页面
             location = /503.html {
               root /usr/share/nginx/html;
             }
+            # 方式二
+            # location @error {
+            #   proxy_pass http://127.0.0.1;
+            # }
+
             # 缓存有效期，这个数值其实就是告诉终端用户浏览器的失效时间。更改后要重启生效
             expires 1d;
             # 最大同时请求rate_zone定义的+burst值（15+25）。多了就会返回503。如果请求超时就404
