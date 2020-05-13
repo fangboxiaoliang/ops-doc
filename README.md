@@ -15,7 +15,7 @@
     * [NGINX配置文件解读](baseservices/nginx-conf.md)
     * [NGINX FAQ](baseservices/nginx-faq.md)
     * [OpenRestry灵活限速](baseservices/openresty-lua-limit.md)
-    * [OpenResty后端健康检查](baservices/openresty-upstream-check.md)
+    * [OpenResty后端健康检查](baseservices/openresty-upstream-check.md)
 
 * 消息队列
   * [RabbitMQ](queue/rabbitmq-prod.md)
