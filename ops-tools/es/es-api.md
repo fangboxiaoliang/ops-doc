@@ -48,6 +48,22 @@
 
         curl -XGET http://es:9200/_template/TemplateName?pretty
 
+- 修改模板。 
+
+  一般修改模板时，使用原来的模板创建新的，并修改优先值。先通过GET获取到模板，然后将所有内容复制出来，将修改的东西增加进去，修改新模板的order值，值越高，越优先。
+
+        curl -XPUT -H "Content-type: application/json" http://es:9200/_template/TemplateName -d "{
+                "order": 2,
+                "template": "graylog_*",
+                "settings": {
+                  "index": {
+            	     "max_result_window": "2000000",
+                  },
+                  ...
+                }
+
+        }"
+
 ## 搜索 API
 
 - 检索信息
