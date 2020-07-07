@@ -22,3 +22,4 @@ pip install -i URL PackageName
 - 行业新星: https://www.itjuzi.com/
 - AnsiblePlayBook： https://galaxy.ansible.com/
 - 愉快地Google: https://abc.bestwhl.top/(有些内容会被过滤，但技术相关一般不会)
+- MySQL内存总使用计算: http://www.mysqlcalculator.com/
