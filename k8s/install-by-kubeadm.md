@@ -35,8 +35,8 @@
     # 安装Docker-ce源
     yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 
-    # 安装相关包
-    yum install docker-ce kubeadm kubectl kubelet -y
+    # 安装相关包,建议指定包版本，不然默认会使用最新稳定版-1
+    yum install docker-ce kubeadm-1.18.5 kubectl-1.18.5 kubelet-1.18.5 -y
 
     # 启动Dokcer
     systemctl enable docker && systemctl start docker
@@ -45,13 +45,15 @@
     # 增加docker参数文件
      cat << EOF > /etc/docker/daemon.json
      {
+        "exec-opts": ["native.cgroupdriver=systemd"],
          "registry-mirrors": ["https://o9a5ub50.mirror.aliyuncs.com"],
          "log-opts": {
              "max-file": "3",
              "max-size": "10m"
          },
-         "insecure-registries": ["172.30.0.0/16", "docker.hub.com:80"],
-         "add-registry": ["docker.hub.com:80"]
+         "insecure-registries": ["docker.hub.com:80"],
+         "add-registry": ["docker.hub.com:80"],
+         "data-root": "/docker"
      }
      EOF
 
@@ -60,80 +62,59 @@
     systemctl restart docker
     ```
 
-2. 创建`ETCD`集群
-
-    ```bash
-    # 修改默认kubelt文件
-    cat << EOF > /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
-    [Service]
-    ExecStart=
-    #  Replace "systemd" with the cgroup driver of your container runtime. The default value in the kubelet is "cgroupfs".
-    ExecStart=/usr/bin/kubelet --address=127.0.0.1 --pod-manifest-path=/etc/kubernetes/manifests --cgroup-driver=systemd
-    Restart=always
-    EOF
-
-    systemctl daemon-reload
-    systemctl restart kubelet
-
-    # 2. 准备etcd的kubeadmin配置文件以及证书相关
-    # 使用 IP 或可解析的主机名替换 HOST0、HOST1 和 HOST2
-    export HOST0=10.0.0.6
-    export HOST1=10.0.0.7
-    export HOST2=10.0.0.8
-
-    # 创建临时目录来存储将被分发到其它主机上的文件
-    mkdir -p /tmp/${HOST0}/ /tmp/${HOST1}/ /tmp/${HOST2}/
-
-    ETCDHOSTS=(${HOST0} ${HOST1} ${HOST2})
-    NAMES=("infra0" "infra1" "infra2")
-
-    for i in "${!ETCDHOSTS[@]}"; do
-    HOST=${ETCDHOSTS[$i]}
-    NAME=${NAMES[$i]}
-    cat << EOF > /tmp/${HOST}/kubeadmcfg.yaml
-    apiVersion: "kubeadm.k8s.io/v1beta2"
-    kind: ClusterConfiguration
-    etcd:
-        local:
-            serverCertSANs:
-            - "${HOST}"
-            peerCertSANs:
-            - "${HOST}"
-            extraArgs:
-                initial-cluster: infra0=https://${ETCDHOSTS[0]}:2380,infra1=https://${ETCDHOSTS[1]}:2380,infra2=https://${ETCDHOSTS[2]}:2380
-                initial-cluster-state: new
-                name: ${NAME}
-                listen-peer-urls: https://${HOST}:2380
-                listen-client-urls: https://${HOST}:2379
-                advertise-client-urls: https://${HOST}:2379
-                initial-advertise-peer-urls: https://${HOST}:2380
-    EOF
-    done
-
-    # 创建证书CA机构，会生成以下两个文件
-    # - /etc/kubernetes/pki/etcd/ca.crt
-    # - /etc/kubernetes/pki/etcd/ca.key
-    kubeadm init phase certs etcd-ca
-
-    ```
-
-3. 初始化第一个控制节点
+2. 初始化第一个控制节点
 
     ```bash
     # 第一台控制节点
     # 10.0.0.100是内部负载均衡的IP地址
+    # 加上--dry-run不实际执行
+    # --servcie-cidr与--pod-network-cidr不要和主机网络重叠了
     kubeadm init    --control-plane-endpoint "10.0.0.100:6443" \
                     --kubernetes-version "1.18.5" \
-                    --service-cidr "172.16.0.0/16" \
-                    --pod-network-cidr "10.1.0.0/16" \
-                    --image-repository "hub.docker.local:5000"
+                    --verbose=5 \
+                    --image-repository "hub.docker.local:5000" > out.txt
+    ```
+    以上执行完成后，第一个节点已好，此时只有一个`ETCD`的`Pod`运行,待后续控制节点加入后，`ETCD`将以集群方式运行，这个转换步骤将由`kubeadm`自动完成。
+
+3. 将`SSL`证书分发到待加入的控制节点
+
+    ```bash
+    # 1.先在待加入节点创建后pki目录
+    mkdir -p /etc/kubernetes/pki/etcd
+
+    # 2. 在第一台控制节点上，将证书复制到待加入的控制节点。其他证书不要复用，kubeadm会自动创建
+    scp /etc/kubernetes/pki/ca.*  root@10.0.0.102:/etc/kubernetes/pki
+    scp /etc/kubernetes/pki/sa.*  root@10.0.0.102:/etc/kubernetes/pki
+    scp /etc/kubernetes/pki/front*  root@10.0.0.102:/etc/kubernetes/pki
+    scp /etc/kubernetes/pki/etcd/ca.*  root@10.0.0.102:/etc/kubernetes/pki/etcd
+
+    # 另外一台复制也一样，此处略...
     ```
 
-2. 控制节点加入
+4. 加入另外的控制节点
+
+    ```bash
+    # 在第一台控制节点中的out.txt文件中，有加入控制节点与工作节点的命令，复制在新控制节点上运行即可
+    kubeadm join 10.0.0.100:6443 --token 6t2uid.s0vqohvf976nnib8 \
+    --discovery-token-ca-cert-hash sha256:9314daf259b95b133a254fd0a8dc41887bc99055c5dfd082a8d41591b18cc98b \
+    --control-plane
+    ```
+
+5. 创建网络与测试验证
+
+    ```bash
+    # 在第一台控制节点上执行
+    mkdir -p $HOME/.kube
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v1.18.5"
+    kubectl get nodes --all-namespaces -o wide
+    kubectl get pods -n kube-system |grep etcd
+    # 验证etcd三个节点都是正常运行，不在本机的coredns Pod的IP在本机可以PING通
+    ```
 
 ## 三、 后续操作
 
-1. 更新证书，可以写入`crontab`默认的证书有效期为1年
+1. 更新证书，可以写入`crontab`默认的证书有效期为1年，`CA`证书10年，下面的命令不能更新`CA`证书
 
     ```bash
     # 查看当前证书有效期
