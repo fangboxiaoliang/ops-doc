@@ -74,7 +74,8 @@
                     --v=5 \
                     --image-repository "hub.docker.local:5000" > out.txt
 
-    # 所使用到的镜像可以通过kubeamd config images list获取，再将取pull下来后，打上内网地址并推送至内部仓库，这样不用每台都从外网下，加快速度
+    # kubeadm config images list --kubernetes-version 1.18.5
+    # 获取镜像与Tag后先pull下来，打上内网地址并推送至内部仓库，这样不用每台都从外网下，加快速度
     ```
     以上执行完成后，第一个节点已好，此时只有一个`ETCD`的`Pod`运行,待后续控制节点加入后，`ETCD`将以集群方式运行，这个转换步骤将由`kubeadm`自动完成。
 
@@ -145,8 +146,6 @@
         name: kubernetes-dashboard
         namespace: kubernetes-dashboard
     ```
-
-
 
 2. 添加`Metric Server`组件
 
