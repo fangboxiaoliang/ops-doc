@@ -58,8 +58,8 @@
      EOF
 
 
-    # 重启docker
-    systemctl restart docker
+    # 重启docker并将kubelet设置为开机自启动
+    systemctl restart docker && systemctl enable kubelet
     ```
 
 2. 初始化第一个控制节点
@@ -67,12 +67,14 @@
     ```bash
     # 第一台控制节点
     # 10.0.0.100是内部负载均衡的IP地址
-    # 加上--dry-run不实际执行
+    # 加上--dry-run不实际执行, -v=5输出更详细的信息
     # --servcie-cidr与--pod-network-cidr不要和主机网络重叠了
     kubeadm init    --control-plane-endpoint "10.0.0.100:6443" \
                     --kubernetes-version "1.18.5" \
-                    --verbose=5 \
+                    --v=5 \
                     --image-repository "hub.docker.local:5000" > out.txt
+
+    # 所使用到的镜像可以通过kubeamd config images list获取，再将取pull下来后，打上内网地址并推送至内部仓库，这样不用每台都从外网下，加快速度
     ```
     以上执行完成后，第一个节点已好，此时只有一个`ETCD`的`Pod`运行,待后续控制节点加入后，`ETCD`将以集群方式运行，这个转换步骤将由`kubeadm`自动完成。
 
@@ -103,18 +105,79 @@
 5. 创建网络与测试验证
 
     ```bash
-    # 在第一台控制节点上执行
+    # 在第一台控制节点上执行,安装网络组件
     mkdir -p $HOME/.kube
     cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v1.18.5"
+
+    # 验证etcd三个节点都是正常运行，不在本机的coredns Pod的IP在本机可以PING通
     kubectl get nodes --all-namespaces -o wide
     kubectl get pods -n kube-system |grep etcd
-    # 验证etcd三个节点都是正常运行，不在本机的coredns Pod的IP在本机可以PING通
+
+    #  Worker节点打上node标签,这样kubectl get nodes ROLES一项就不为None
+    kubectl label node NodeName node-role.kubernetes.io/node=
     ```
 
-## 三、 后续操作
+## 三、 后续组件安装
 
-1. 更新证书，可以写入`crontab`默认的证书有效期为1年，`CA`证书10年，下面的命令不能更新`CA`证书
+1. 添加`Kubernetes Dashboard`组件
+
+    ```bash
+    wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.3/aio/deploy/recommended.yaml
+    ```
+
+    修改`recommended.yaml`:
+
+    ```yaml
+    ...
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+    name: kubernetes-dashboard
+    roleRef:
+    io
+    kind: ClusterRole
+    # 约164行,修改ClusterRoleBinding,将默认的用户修改为admin
+    # name: kubernetes-dashboard
+    name: admin
+    subjects:
+    - kind: ServiceAccount
+        name: kubernetes-dashboard
+        namespace: kubernetes-dashboard
+    ```
+
+
+
+2. 添加`Metric Server`组件
+
+    ```bash
+    wget https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
+    ```
+
+    修改`components.yaml`:
+
+    ```yaml
+    ...
+    args:
+    # 添加
+    - /metrics-server
+    - --metric-resolution=30s
+    - --kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP
+    - --kubelet-insecure-tls
+    # 添加以上内容
+    - --cert-dir=/tmp
+    - --secure-port=4443
+    ...
+    # 约109行，添加污点容忍，将Pod部署在Master节点上
+    # 同nodeSelector对齐
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+    ```
+
+
+
+2. 更新证书，可以写入`crontab`默认的证书有效期为1年，`CA`证书10年，下面的命令不能更新`CA`证书
 
     ```bash
     # 查看当前证书有效期
