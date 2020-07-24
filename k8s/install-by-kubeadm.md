@@ -130,13 +130,21 @@
     修改`recommended.yaml`:
 
     ```yaml
+    # 修改service暴露出来,约40行
     ...
+    spec:
+      externalIPS:
+      - 10.0.0.101 #集群内任意一台主机的内网IP
+      ports:
+        - port: 9443 #修改暴露出来的端口
+    ...
+    # 修改集群角色
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
     name: kubernetes-dashboard
     roleRef:
-    io
+    apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
     # 约164行,修改ClusterRoleBinding,将默认的用户修改为admin
     # name: kubernetes-dashboard
@@ -146,6 +154,15 @@
         name: kubernetes-dashboard
         namespace: kubernetes-dashboard
     ```
+
+    获取`Kubernetes Dashboard`的`Token`
+
+    ```bash
+     # 获取返回的Token字段即可
+    token=$(kubectl get secret -n kubernetes-dashboard |grep kubernetes-dashboard-token | awk '{print $1}')
+    kubectl describe secret ${token} -n kubernetes-dashboard
+    ```
+    
 
 2. 添加`Metric Server`组件
 
