@@ -29,9 +29,6 @@ wget https://github.com/maxmind/libmaxminddb/releases/download/1.4.2/libmaxmindd
 tar -zxvf libmaxminddb-1.4.2.tar.gz
 cd libmaxminddb-1.4.2
 ./configure && make && make install
-
-# 做一个软连接.OpenResty/NGINX默认会从lib64里面加载库文件
-ln -s /opt/maxminddb/lib/libmaxminddb.so.0.0.7 /lib64/libmaxminddb.so.0
 ```
 
 编译安装`OpenResty`
@@ -78,4 +75,25 @@ http {
 
 `city_name`为城市英文代码
 
-变量`city_name`是根据`remote_addr`来解析的，如果前面还有一层代理，则需要将该变量设置为正确的外网IP，或者替换变量名。不然可能会解析错误。如果解析不出来，则`city_name`的值会使用默认值`London`。
+变量`city_name`是根据`remote_addr`来解析的，如果前面还有一层代理，
+则需要将该变量设置为正确的外网IP，或者替换变量名。不然可能会解析错
+误。如果解析不出来，则`city_name`的值会使用默认值`London`。
+
+
+## 有可能会遇到的坑
+
+`nginx -t` 报错，提示无法加载库文件
+
+解决方法
+
+```bash
+# 查看使用的动态库文件
+ldd /opt/openresty/nginx/sbin/nginx | grep libmaxminddb
+
+#如果该库指向为Not Found,则做一个软连接至默认搜索库即可
+# 搜索文件路径
+find / -type f -name libmaxminddb.so.0
+
+# 软链接指向/lib64目录
+ln -s FilePath /lib64/
+```
