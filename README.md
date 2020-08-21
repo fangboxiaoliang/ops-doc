@@ -17,6 +17,7 @@
     * [OpenRestry灵活限速](baseservices/openresty-lua-limit.md)
     * [OpenResty后端健康检查](baseservices/openresty-upstream-check.md)
     * [OpenResty整合GeoIP2识别城市](baseservices/openresty-geoip2.md)
+    * [OpenResty+Reids+Lua根据IP分发不同后端](baseservices/openresty-lua-backend.md)
 
 * 消息队列
   * [RabbitMQ](queue/rabbitmq-prod.md)
