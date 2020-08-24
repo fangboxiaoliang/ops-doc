@@ -114,6 +114,91 @@
     end
     ```
 
+## 方法二
+
+
+前面的方法虽然是实现了，但总感觉不够优雅。而且做完压力测试后发现，以100的并发来压测，虽然增加的响应时间忽略不计，但对网络IO增长还是蛮多，连接`Redis`后的`TIME_WAIT`状态达到`9000`多，想想也是有点恐怖。
+
+在此方法中，优化连接`Redis`的连接，因为`IO`都集中在频繁连接/断开`Redis`。通过`lua_shared_dict`，`init_by_lua_file`与`set_by_lua_file`实现
+
+## 1. 定义二个`upstream`，此处和上面一样，略
+
+## 2. `nginx.conf`
+
+```conf
+...
+http {
+    ...
+    # 共享内存区域，用于所有的work进程变量共享
+    lua_shared_dict ips 20m;
+    init_by_lua_file conf/lua/init.lua;
+    ...
+    server {
+        ...
+        location / {
+            ...
+            # 设置upstream
+            set_by_lua_file $backend conf/lua/set_upstream.lua;
+            proxy_pass http://$backend;
+        }
+        ...
+    }
+    ...
+}
+...
+
+```
+
+## `init.lua`
+
+```lua
+#!/usr/bin/lua
+
+local host = "127.0.0.1"
+local port = 6380
+local key = "td:stage:shops"
+
+local cmd = string.format("echo 'smembers %s' | redis-cli -h %s -p %d", key, host, port)
+-- local cmd = "cat /usr/local/openresty/nginx/conf/lua/ip.txt"
+local f = io.popen(cmd)
+local output = f:read("*a")
+local ips = ngx.shared.ips
+-- local std = string.gsub(output, "\n", ",")
+ips:set("ips", output)
+-- ngx.log(ngx.ERR, output)
+f:close()
+```
+
+## `set_upstream.lua`
+
+```lua
+local function get_ip()
+    local client_ip = ngx.req.get_headers()["X-Real-IP"]
+    if client_ip == nil then
+        client_ip = ngx.req.get_headers()["x_forwarded_for"]
+    end
+
+    if client_ip == nil then
+        client_ip = ngx.var.remote_addr
+    end
+
+    return client_ip
+end
+
+
+local remote_ip = get_ip()
+local ngx_dic = ngx.shared.ips
+local stage_ip = ngx_dic:get("ips")
+local result = string.find(stage_ip, remote_ip)
+if result == nil then
+    return "default"
+else
+    return "stage"
+end
+```
+
+方法二的缺点就是不能实时更新，因为只有在`init`阶段写入共享内存，因此当要更新`IP`时，只能`Reload`
+
 
 ## 测试
 
@@ -122,7 +207,5 @@
  ```bash
  echo "sadd td:stage:shops 192.168.0.100" | redis-cli -x
  ```
-
-
 
 通过启用`log_format`中的`request_time`时间对比,使用了`rewrite_by_lua_file`与未使用相比,时间上没差距.既使`Redis`挂了,也不会产生阻塞导致响应时间过长,而是会直接使用默认(`"default"`)的后端
