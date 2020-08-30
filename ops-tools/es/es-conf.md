@@ -19,6 +19,8 @@ network.host：172.16.1.1
 # 一启动就占用分配的内存，防止使用SWAP分区
 # ES_HEAP_SIZE 这个JAVA_OPTS官方建设设置为物理内存的一半
 bootstrap.memory_lock: true
+# 默认当磁盘可用空间少于85%时，将不再分配新的索引在节点上，已存在的不影响，该选项就是取消85%的限制，生产配合磁盘监控即可
+cluster.routing.allocation.disk.threshold_enabled: false
 ```
 
 ## 内存配置
