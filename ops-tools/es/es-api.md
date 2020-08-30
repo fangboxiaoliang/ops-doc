@@ -14,11 +14,11 @@
   
         curl -XGET http://es:9200/IndexName/_settings?pretty
 
-- 取消只读模式
+- 取消所有索引只读模式
 
-        curl -XPUT -H "Content-type: application/json" http://172.18.61.78:9200/_cluster/settings -d '{
+        curl -XPUT -H "Content-type: application/json" http://172.18.61.78:9200/_settings -d '{
                 "index.blocks.read_only_allow_delete":"false"
-       }'
+        }'
 
 ## 集群API
 
