@@ -82,7 +82,9 @@ function get_header(key)
         return v
     end
   end
+  return "nil"
 end
+
 local shop_id = get_header("shopid");
 return shop_id;
 ```
