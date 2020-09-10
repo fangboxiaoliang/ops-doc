@@ -133,7 +133,7 @@
     # 修改service暴露出来,约40行
     ...
     spec:
-      externalIPS:
+      externalIPs:
       - 10.0.0.101 #集群内任意一台主机的内网IP
       ports:
         - port: 9443 #修改暴露出来的端口
