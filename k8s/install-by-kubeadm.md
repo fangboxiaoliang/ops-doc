@@ -71,7 +71,7 @@
     # --servcie-cidr与--pod-network-cidr不要和主机网络重叠了
     kubeadm init    --control-plane-endpoint "10.0.0.100:6443" \
                     --kubernetes-version "1.18.5" \
-                    --v=5 \
+                    -v=5 \
                     --image-repository "hub.docker.local:5000" > out.txt
 
     # kubeadm config images list --kubernetes-version 1.18.5
