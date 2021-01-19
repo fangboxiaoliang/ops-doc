@@ -66,7 +66,7 @@
 
     ```bash
     # 第一台控制节点
-    # 10.0.0.100是内部负载均衡的IP地址
+    # 10.0.0.100是内部负载均衡的IP地址，是master集群的kubernetes-api的端口映射。
     # 加上--dry-run不实际执行, -v=5输出更详细的信息
     # --servcie-cidr与--pod-network-cidr不要和主机网络重叠了
     kubeadm init    --control-plane-endpoint "10.0.0.100:6443" \
